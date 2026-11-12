@@ -19,6 +19,15 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     total_credits_spent = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['role'],
+                condition=models.Q(role='LIBRARIAN'),
+                name='only_one_librarian_role',
+            ),
+        ]
+
     @property
     def total_credits_earned(self) -> int:
         elapsed_seconds = max(0.0, (timezone.now() - self.created_at).total_seconds())

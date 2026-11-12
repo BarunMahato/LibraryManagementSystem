@@ -12,9 +12,30 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def load_local_env(env_path):
+    """Load simple KEY=value entries without overriding process environment."""
+    if not env_path.is_file():
+        return
+    for raw_line in env_path.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+            value = value[1:-1]
+        if key:
+            os.environ.setdefault(key, value)
+
+
+load_local_env(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -156,3 +177,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Set this environment variable to allow a one-time librarian signup from the UI.
+# Leave empty to disable public librarian account creation.
+LIBRARIAN_SIGNUP_CODE = os.environ.get('LIBRARIAN_SIGNUP_CODE', '')
